@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>Chatter at CSS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <style>
+      form  {padding:20px; position:fixed; bottom:0; width:100%; padding-right: 50px;}
+      #messages {list-style-type: none; margin: 0; padding: 0; width: 100%;}
+      #messages li {padding: 5px 10px;}
+      #messages li:nth-child(odd) {background: #eee;}
+    </style>
+  </head>
+
+  <body>
+
+    <div class="container-fluid">
+      <div class="row">
+        <ul id="messages"></ul>
+      </div>
+      <div class="row">
+        <div class="col-lg-6">
+          <form action="">
+            <div class="input-group">
+              <input id="m" autocomplete="off" type="text" class="form-control" placeholder="Message" aria-label="Message">
+              <span class="input-group-btn">
+                <button class="btn btn-secondary" type="submit">Send</button>
+              </span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+    <!--Load socket.io.js to have the client run the socket-->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!--
+    The client will connect to the socket.io instance here. So the event
+    'connection' runs. We'll then receive a 'message' from the server and
+    we'll reply with 'another event'. Basically the server will be expecting
+    another event.
+    -->
+    <script>
+      const socket = io('/tech'); // connecting to the tech namespace in the server.
+      const room = 'css';
+
+      $('form').submit(() => {
+        let msg = $('#m').val();
+        socket.emit('message', {msg,room}); // message for that room
+        $('#m').val('');
+        return false;
+      });
+
+      /*
+      Using one event to communicate with multiple other events. This is good if we want 
+      to have multiple events under one event.
+      Here, 'connect' is a built-in socket.io API while 'message' is a user-defined socket.io API.
+      This happens when the client is connected to the server via the socket.
+      */
+      socket.on('connect', () => {
+        //socket.emit('message','User is connected'); // emitting to everybody.
+        socket.emit('join',{room:room}); // 'join' is also a built-in socket.io API
+      });
+
+      socket.on('message',(msg) => {
+        $('#messages').append($('<li>').text(msg)); 
+      });
+    </script>
+
+  </body>
+
+</html>
